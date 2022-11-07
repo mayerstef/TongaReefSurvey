@@ -366,6 +366,56 @@ tonga.dbmemmed.ax2.env <-
   lm(tonga.dbmemmed.axes[ ,2] ~ ., data = tonga.env)
 summary(tonga.dbmemmed.ax2.env)
 
+####Negative dbMEMS
+tonga.dbmem.test <- dbmem(tonga.xy, silent = F, MEM.autocor=c("negative"))
+(tonga.dbmem.neg <- as.data.frame(tonga.dbmem.test))
+RsquareAdj(rda(tonga.dc, tonga.dbmem.neg))
+
+
+(tonga.dbmem.neg.rda <- rda(tonga.dc.det ~ ., tonga.dbmem.neg))
+(tonga.dbmem.neg.rda0 <- rda(tonga.dc.det ~ 1, tonga.dbmem.neg))
+anova(tonga.dbmem.neg.rda)
+(tonga.neg.R2a <- RsquareAdj(tonga.dbmem.neg.rda)$adj.r.squared)
+(tonga.dbmem.neg.fwd <- forward.sel(tonga.dc.det, as.matrix(tonga.dbmem.neg), alpha = 0.5))
+tonga.dbmem.neg.sel <- tonga.dbmem.neg[,tonga.dbmem.neg.fwd$order]
+RsquareAdj(rda(tonga.dc.det, tonga.dbmem.neg.sel))
+
+
+
+(nb.sig.dbmem.neg <- nrow(tonga.dbmem.neg.fwd))    # Number of signif. dbMEM
+# Identity of the significant dbMEM in increasing order
+(dbmem.sign.neg <- sort(tonga.dbmem.neg.fwd[ ,2]))
+# Write the significant dbMEM to a new object
+dbmem.red.neg <- tonga.dbmem.neg[ ,c(dbmem.sign.neg)]
+
+## Step 4. New dbMEM analysis with 8 significant dbMEM variables
+##    Adjusted R-square after forward selection: R2adj = 0.2255962 --> 0.1924879
+(tonga.dbmem.neg.rda2 <- rda(tonga.dc.det ~ ., data = dbmem.red.neg))
+(tonga.fwd.R2a.neg <- RsquareAdj(tonga.dbmem.neg.rda2)$adj.r.squared)
+anova(tonga.dbmem.neg.rda2)
+(axes.test <- anova(tonga.dbmem.neg.rda2, by = "axis"))
+# Number of significant axes
+(nb.ax.neg <- length(which(axes.test[ ,ncol(axes.test)] <=  0.05)))
+
+## Step 5. Plot the significant canonical axes
+tonga.rda2.axes.neg <- 
+  scores(tonga.dbmem.neg.rda2, 
+         choices = c(1:nb.ax.neg), 
+         display = "lc", 
+         scaling = 1)
+dev.new(
+  title = "dbMEM analysis of tonga data", 
+  width = 8, 
+  height = 6, 
+  noRStudioGD = TRUE
+)
+par(mfrow = c(1,nb.ax.neg))
+for(i in 1:nb.ax.neg){
+  sr.value(tonga.xy, tonga.rda2.axes.neg[ ,i], 
+           sub = paste("RDA",i), 
+           csub = 2)
+}
+
 
 ## dbMEM analysis of the tonga data - fine scale
 
